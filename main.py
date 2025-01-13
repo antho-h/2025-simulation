@@ -2,6 +2,7 @@ import pygame
 from bot import Bot
 from field import Field as Field
 from config import GAME_SCALE as SC
+from buttons import Button, Switch, Slider
 
 def handleBotSelection(event):
     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -29,6 +30,8 @@ if __name__ == "__main__":
     bot1 = Bot("1", 100, 100, 10 * SC, (0,0,0))
     bot2 = Bot("2", 300, 100, 10 * SC, (0,0,0))
     bot1.hasBall = True
+    s = Slider(800, 100, 100)
+    s.setScale(-100, 1000)
 
 
     # Main loop
@@ -47,6 +50,7 @@ if __name__ == "__main__":
             handleBotSelection(event)
             bot1.handleEvent(event)
             bot2.handleEvent(event)
+            s.handleEvent(event)
 
 
         # Fill the screen with white
@@ -56,7 +60,8 @@ if __name__ == "__main__":
         field.draw(screen)
         bot1.draw(screen)
         bot2.draw(screen)
-
+        s.draw(screen)
+        print(s.getValue())
 
 
         # Update the display
