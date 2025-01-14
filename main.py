@@ -3,8 +3,13 @@ from bot import Bot
 from field import Field as Field
 from config import GAME_SCALE as SC
 from buttons import Button, Switch, Slider
+from obstacle import Obstacle, ObstacleManager as ObstacleManager
 
-def handleBotSelection(event):
+
+def handleBotSelection(event, handler):
+    if handler.placeMode:
+        return
+
     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
         bot1.isSelected = False
         bot2.isSelected = False
@@ -20,7 +25,11 @@ def handleBotSelection(event):
             bot2.isSelected = True
 
 
+
 if __name__ == "__main__":
+
+
+
     pygame.init()
     screen = pygame.display.set_mode((1280, 900))
 
@@ -32,6 +41,7 @@ if __name__ == "__main__":
     bot1.hasBall = True
     s = Slider(800, 100, 100)
     s.setScale(-100, 1000)
+    handler = ObstacleManager()
 
 
     # Main loop
@@ -47,10 +57,11 @@ if __name__ == "__main__":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
                 bot1.hasBall = not bot1.hasBall
                 bot2.hasBall = not bot2.hasBall
-            handleBotSelection(event)
+            handleBotSelection(event, handler)
             bot1.handleEvent(event)
             bot2.handleEvent(event)
             s.handleEvent(event)
+            handler.handleEvent(event)
 
 
         # Fill the screen with white
@@ -61,6 +72,7 @@ if __name__ == "__main__":
         bot1.draw(screen)
         bot2.draw(screen)
         s.draw(screen)
+        handler.draw(screen)
         print(s.getValue())
 
 
