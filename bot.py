@@ -1,6 +1,9 @@
 import math
-
+from vector import Vector
 import pygame
+from obstacle import ObstacleManager
+from vectorVisual import vectorVisual as VV
+from config import GAME_SCALE as SC
 
 class Bot:
     def __init__(self, name, x, y, radius, color):
@@ -11,6 +14,7 @@ class Bot:
         self.angle = 0
         self.move(x, y)
         self.color = color
+        self.obstaclePosList : list[Vector] = []
 
         self.isSelected = False
         self.hasBall = False
@@ -26,7 +30,7 @@ class Bot:
         self.front.centery = y + self.circle.height / 2 * math.sin(angle/180*math.pi)
 
     def draw(self, screen):
-
+        self.updateObstacleVector()
         pygame.draw.ellipse(screen, self.color, self.circle)
         pygame.draw.ellipse(screen, self.color, self.front)
         label_rect = self.label.get_rect(center=(self.circle.centerx, self.circle.centery))
@@ -36,32 +40,69 @@ class Bot:
         if self.hasBall:
             pygame.draw.ellipse(screen, (0, 100, 100), self.front)
 
+        for v in self.obstaclePosList:
+            op = Vector(x = self.circle.centerx, y = self.circle.centery)
+            VV.draw(op, v, (255, 0, 0), screen)
+
+
     def handleEvent(self, event):
-        if not self.isSelected:
-            return
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 2: # middle click
-                self.angle = 0
-                self.isSelected = False
 
-            if event.button == 4: # scroll up
-                self.angle -= 5
-            if event.button == 5: # scroll down
-                self.angle += 5
-            if event.button == 3: # right click
-                dx = event.pos[0] - self.circle.centerx
-                dy = event.pos[1] - self.circle.centery
-                self.angle = math.atan2(dy,dx) * 180 / math.pi + 90
-                self.isSelected = False
-
-            self.move(self.circle.centerx, self.circle.centery)
-
-            if event.button == 1: # left click
+        if event.type == pygame.MOUSEBUTTONUP:
+            self.isSelected = False
+        if event.type == pygame.MOUSEMOTION:
+            if self.isSelected:
                 self.move(event.pos[0], event.pos[1])
-                self.isSelected = False
+        if event.type == pygame.MOUSEBUTTONDOWN and self.circle.collidepoint(event.pos):
+            if event.button == 4:
+                self.angle -= 5
+                self.move(self.circle.centerx, self.circle.centery)
+            if event.button == 5:
+                self.angle += 5
+                self.move(self.circle.centerx, self.circle.centery)
 
 
 
+    def updateObstacleVector(self):
+        self.obstaclePosList.clear()
+        for obstacle in ObstacleManager.obstacles:
+            x: int = obstacle.circle.centerx - self.circle.centerx
+            y: int = obstacle.circle.centery - self.circle.centery
+            v = Vector(x = x, y = y)
+
+
+            self.obstaclePosList.append(v)
+
+class BotManager:
+    bot1, bot2 = None, None
+    @staticmethod
+    def init():
+        BotManager.bot1 = Bot("1", 100, 100, 10 * SC, (0, 0, 0))
+        BotManager.bot2 = Bot("2", 300, 100, 10 * SC, (0, 0, 0))
+        BotManager.bot1.hasBall = True
+
+    @staticmethod
+    def draw(screen):
+        BotManager.bot1.draw(screen)
+        BotManager.bot2.draw(screen)
+
+    @staticmethod
+    def handleEvent(event):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+            BotManager.bot1.hasBall = not BotManager.bot1.hasBall
+            BotManager.bot2.hasBall = not BotManager.bot2.hasBall
+        if ObstacleManager.placeMode:
+            return
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if BotManager.bot1.circle.collidepoint(event.pos):
+                BotManager.bot1.isSelected = True
+            elif BotManager.bot2.circle.collidepoint(event.pos) and event.button == 1:
+                BotManager.bot2.isSelected = True
+
+
+
+
+        BotManager.bot1.handleEvent(event)
+        BotManager.bot2.handleEvent(event)
 
 
 

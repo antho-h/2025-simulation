@@ -2,44 +2,50 @@ import pygame
 from config import GAME_SCALE as SC
 
 class Obstacle:
-    def __init__(self, x, y, w, h, color):
-        self.rect = pygame.Rect(x, y, w, h)
+    def __init__(self, x, y, r, color):
         self.color = color
+        self.circle = pygame.Rect(x - r, y - r, 2*r, 2*r)
+
 
     def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.rect.x, self.rect.y), 10*SC)
+        pygame.draw.circle(screen, self.color, self.circle.center, self.circle.width//2)
 
     def checkCollision(self, event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.rect.collidepoint(event.pos):
+            if self.circle.collidepoint(event.pos):
                 return True
         return False
 
 class ObstacleManager:
-    def __init__(self):
-        self.placeMode = False
-        self.obstacles = []
+    obstacles = []
+    placeMode = False
 
-    def addObstacle(self, obstacle):
-        self.obstacles.append(obstacle)
+    @staticmethod
+    def addObstacle(obstacle : Obstacle):
+        ObstacleManager.obstacles.append(obstacle)
 
-    def draw(self, screen):
-        for obstacle in self.obstacles:
+    @staticmethod
+    def draw( screen):
+        for obstacle in ObstacleManager.obstacles:
             obstacle.draw(screen)
 
-    def handleEvent(self, event):
+    @staticmethod
+    def handleEvent( event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_g:
-            self.placeMode = not self.placeMode
-        if not self.placeMode:
+            ObstacleManager.placeMode = not ObstacleManager.placeMode
+        if not ObstacleManager.placeMode:
             return
-        if not event.type == pygame.MOUSEBUTTONDOWN:
+        if not event.type == pygame.MOUSEBUTTONDOWN or not event.button == 1:
             return
-        removedObstacle = False
 
-        for i in range(0, len(self.obstacles)   ):
-            if self.obstacles[i].checkCollision(event):
+        removedObstacle = False
+        i = 0
+        while i < len(ObstacleManager.obstacles):
+            if ObstacleManager.obstacles[i].checkCollision(event):
+                ObstacleManager.obstacles.pop(i)
                 removedObstacle = True
-                self.obstacles.pop(i)
-                break
+            else:
+                i += 1
+
         if not removedObstacle:
-            self.addObstacle(Obstacle(event.pos[0], event.pos[1], 50, 50, (0, 0, 0)))
+            ObstacleManager.addObstacle(Obstacle(event.pos[0], event.pos[1], 10*SC, (0, 0, 0)))
