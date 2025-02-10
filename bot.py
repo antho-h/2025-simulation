@@ -4,9 +4,10 @@ import pygame
 from obstacle import ObstacleManager
 from vectorVisual import vectorVisual as VV
 from config import GAME_SCALE as SC
-
+from logicHandler import logicHandler
 class Bot:
     def __init__(self, name, x, y, radius, color):
+        self.logic = logicHandler()
         self.name = name
         self.circle = pygame.Rect(x - radius, y - radius, radius * 2, radius * 2)
         self.front = pygame.Rect(0, 0, 20,20)
@@ -14,7 +15,6 @@ class Bot:
         self.angle = 0
         self.move(x, y)
         self.color = color
-        self.obstaclePosList : list[Vector] = []
 
         self.isSelected = False
         self.hasBall = False
@@ -30,7 +30,9 @@ class Bot:
         self.front.centery = y + self.circle.height / 2 * math.sin(angle/180*math.pi)
 
     def draw(self, screen):
-        self.updateObstacleVector()
+        self.logic.update(self.circle.centerx, self.circle.centery)
+        self.logic.draw(screen)
+
         pygame.draw.ellipse(screen, self.color, self.circle)
         pygame.draw.ellipse(screen, self.color, self.front)
         label_rect = self.label.get_rect(center=(self.circle.centerx, self.circle.centery))
@@ -40,9 +42,6 @@ class Bot:
         if self.hasBall:
             pygame.draw.ellipse(screen, (0, 100, 100), self.front)
 
-        for v in self.obstaclePosList:
-            op = Vector(x = self.circle.centerx, y = self.circle.centery)
-            VV.draw(op, v, (255, 0, 0), screen)
 
 
     def handleEvent(self, event):
@@ -62,15 +61,7 @@ class Bot:
 
 
 
-    def updateObstacleVector(self):
-        self.obstaclePosList.clear()
-        for obstacle in ObstacleManager.obstacles:
-            x: int = obstacle.circle.centerx - self.circle.centerx
-            y: int = obstacle.circle.centery - self.circle.centery
-            v = Vector(x = x, y = y)
 
-
-            self.obstaclePosList.append(v)
 
 class BotManager:
     bot1, bot2 = None, None
